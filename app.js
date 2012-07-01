@@ -58,8 +58,8 @@ function calculateBallPosition() {
             console.log(state.bottomPaddle);
             var leftPositionOfBottomPaddle = state.paddles[state.bottomPaddle];
             console.log(leftPositionOfBottomPaddle);
-            if (left > ( (leftPositionOfBottomPaddle/100) * 600 - constants.paddle.width / 2) &&
-                (left < ( (leftPositionOfBottomPaddle/100) * 600 + constants.paddle.width / 2) ) ) {
+            if (left > ( (leftPositionOfBottomPaddle/100) * constants.court.width - constants.paddle.width / 2) &&
+                (left < ( (leftPositionOfBottomPaddle/100) * constants.court.width + constants.paddle.width / 2) ) ) {
               top = constants.court.height - constants.paddle.height - constants.ball.radius;
               constants.ball.deltaTop = -constants.ball.deltaTop;
             }

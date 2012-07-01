@@ -2,6 +2,17 @@
 <html>
   <head>
     <meta charset="UTF-8">
+    <style>
+      .topPlayer {
+        -moz-transform: rotate(180deg);
+      }
+      .leftPlayer {
+        -moz-transform: rotate(270deg);
+      }
+      .rightPlayer {
+        -moz-tranform: rotate(90deg);
+      }
+    </style>
   </head>
   <body>
     <canvas id="court"></canvas>
@@ -9,7 +20,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
     
-  var constants = { court: { width: 0, height: 0 }, 
+  var constants = { court: { width: 0, height: 0, adjusted: false }, 
                     colors: { court: "brown", ball: "black", paddle: "orange" },
                     paddle: { width: 0, height: 0, delta: 0 },
                     ball: { radius: 0 },
@@ -43,6 +54,15 @@
       paddles[constants.player.id] = state.paddles[constants.player.id];
     state.paddles = paddles;
     state.sides = data.sides;
+    if (!constants.court.adjusted) {
+        constants.court.adjusted = true;
+        if (state.sides.top == constants.player.id)
+            canvas.className = 'topPlayer';
+        else if (state.sides.left == constants.player.id)
+            canvas.className = 'leftPlayer';
+        else if (state.sides.right == constants.player.id)
+            canvas.className = 'rightPlayer';
+    }
   });
   
   socket.on('ball', function (data) {
