@@ -29,8 +29,11 @@
     constants.paddle.delta = data.paddle.delta;
     constants.paddle.width  = data.paddle.width;
     constants.paddle.height  = data.paddle.height;
-    constants.ball.radius = data.ball.radius;
-    positions.myPaddle.position = data.paddle.position;
+    constants.ball.radius = data.ball.radius;    
+  });
+  
+  socket.on('paddles', function(data) {
+    positions.myPaddle.position = data.myPaddle.position;
   });
   
   socket.on('ball', function (data) {

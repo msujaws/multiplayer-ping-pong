@@ -3,6 +3,7 @@
 //Splash Page
 //  - Join a new game
 // move javascript to client.js
+
 var constants = { court: { width: 600, height: 600 }, 
                   paddle: { width: 50, height: 15, delta: 3 },
                   ball: { radius: 10, deltaLeft: 3, deltaTop: 2, interval: 15 }
@@ -38,7 +39,7 @@ function handler (req, res) {
 function calculateBallPosition() {
     var left = positions.ball.left + constants.ball.deltaLeft;
     var top = positions.ball.top + constants.ball.deltaTop;
-    
+
     if (left >= constants.court.width) {
         left = constants.court.width;
         constants.ball.deltaLeft = -constants.ball.deltaLeft;
@@ -64,22 +65,18 @@ function calculateBallPosition() {
     positions.ball.top = top;
 };
 
-
-
 io.sockets.on('connection', function (socket) {
     serverState.connections++;
     console.log(serverState.connections);
     socket.emit('environment', { court:  {  width:  constants.court.width, 
                                             height: constants.court.height,
                                          }, 
-                                 paddle: {  position: positions.paddles.position,
-                                            width: constants.paddle.width, 
+                                 paddle: {  width: constants.paddle.width, 
                                             height: constants.paddle.height,
                                             delta: constants.paddle.delta
                                          },
                                  ball: { radius: constants.ball.radius }       
-                               } 
-                );          
+    });          
     
     if ( !serverState.intervalId ) {
         serverState.intervalId = setInterval( function(){
@@ -89,6 +86,7 @@ io.sockets.on('connection', function (socket) {
     
     socket.intervalId = setInterval( function(){
         socket.emit('ball', { position: { left: positions.ball.left, top: positions.ball.top } }); 
+        socket.emit('paddles', { myPaddle: { position : positions.paddles.position } } );
     }, constants.ball.interval );  
     
     socket.on('paddle', function (data) {
