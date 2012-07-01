@@ -2,7 +2,7 @@
 //Display countown after each score #1
 //Splash Page
 //  - Join a new game
-
+// move javascript to client.js
 
 var connections = 0;
 
