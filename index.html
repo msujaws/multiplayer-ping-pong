@@ -16,9 +16,10 @@
                     player: { id: 0 }
                   };                               
 
-  var positions = { paddles: {},
-                    ball: { left: 0, top: 0 }
-                  };
+  var state = { paddles: {},
+                ball: { left: 0, top: 0 },
+                sides: {}
+              };
 
   var socket = io.connect('http://localhost'),
       canvas = document.getElementById("court"),
@@ -38,14 +39,15 @@
     var paddles = data.positions;
     // Overwrite the server's version of my own paddle position
     // if I already know where I am so I don't redraw in the old spot.
-    if (positions.paddles[constants.player.id])
-      paddles[constants.player.id] = positions.paddles[constants.player.id];
-    positions.paddles = paddles;
+    if (state.paddles[constants.player.id])
+      paddles[constants.player.id] = state.paddles[constants.player.id];
+    state.paddles = paddles;
+    state.sides = data.sides;
   });
   
   socket.on('ball', function (data) {
-    positions.ball.left = data.position.left;
-    positions.ball.top = data.position.top;
+    state.ball.left = data.position.left;
+    state.ball.top = data.position.top;
     drawCanvas();     
   });
   
@@ -55,23 +57,25 @@
     ctx.fillStyle = constants.colors.court;
     ctx.fillRect(0, 0, constants.court.width, constants.court.height);
     ctx.fillStyle = constants.colors.paddle;
-    ctx.fillRect((positions.paddles[constants.player.id] / 100 * constants.court.width) - (constants.paddle.width / 2),
+    ctx.fillRect((state.paddles[state.sides.bottom] / 100 * constants.court.width) - (constants.paddle.width / 2),
                  constants.court.height - constants.paddle.height, constants.paddle.width, constants.paddle.height);
+    ctx.fillRect((state.paddles[state.sides.top] / 100 * constants.court.width) - (constants.paddle.width / 2),
+                 0, constants.paddle.width, constants.paddle.height);
     ctx.fillStyle = constants.colors.ball;
     ctx.beginPath(); 
-    ctx.arc( positions.ball.left, positions.ball.top, constants.ball.radius, 0, Math.PI * 2 );
+    ctx.arc( state.ball.left, state.ball.top, constants.ball.radius, 0, Math.PI * 2 );
     ctx.fill();
   };
 
   var movePaddle = function (delta) {
-    var newLeft = positions.paddles[constants.player.id] + delta;
+    var newLeft = state.paddles[constants.player.id] + delta;
     if (newLeft >= 100)
       newLeft = 100;
     else if (newLeft <= 0)
       newLeft = 0;
-    if (newLeft != positions.paddles[constants.player.id]) {
-      positions.paddles[constants.player.id] = newLeft;
-      socket.emit('paddle', {left: positions.paddles[constants.player.id] });
+    if (newLeft != state.paddles[constants.player.id]) {
+      state.paddles[constants.player.id] = newLeft;
+      socket.emit('paddle', {left: state.paddles[constants.player.id] });
       drawCanvas();
     }
   };

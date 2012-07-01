@@ -4,6 +4,7 @@
 //  - Join a new game
 // move javascript to client.js
 // move code to server to test multiple players
+// have different colors for the paddles based on player position
 
 var constants = { court: { width: 600, height: 600 }, 
                   paddle: { width: 50, height: 15, delta: 3 },
@@ -112,7 +113,7 @@ io.sockets.on('connection', function (socket) {
     
     socket.intervalId = setInterval( function(){
         socket.emit('ball', { position: { left: state.ball.left, top: state.ball.top } }); 
-        socket.emit('paddles', { positions: state.paddles });
+        socket.emit('paddles', { positions: state.paddles, sides: {bottom: state.bottomPaddle, top: state.topPaddle, left: state.leftPaddle, right: state.rightPaddle }});
     }, constants.ball.interval );  
     
     socket.on('paddle', function (data) {
