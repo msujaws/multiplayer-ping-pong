@@ -87,7 +87,7 @@ io.sockets.on('connection', function (socket) {
         }, constants.ball.interval );  
     }
     
-    setInterval( function(){
+    socket.intervalId = setInterval( function(){
         socket.emit('ball', { position: { left: positions.ball.left, top: positions.ball.top } }); 
     }, constants.ball.interval );  
     
@@ -97,6 +97,7 @@ io.sockets.on('connection', function (socket) {
     
     socket.on('disconnect', function () {
         serverState.connections--;
+        clearInterval( socket.intervalId );
         if ( serverState.connections == 0 ) {
             clearInterval( serverState.intervalId );
             serverState.intervalId = 0;
