@@ -54,13 +54,11 @@ function calculateBallPosition() {
         constants.ball.deltaLeft = -constants.ball.deltaLeft;
     }
     if (top + constants.ball.radius >= constants.court.height - constants.paddle.height) {
-        if (state.bottomPaddle) {
-            var leftPositionOfBottomPaddle = state.paddles[state.bottomPaddle];
-            if (left > ( (leftPositionOfBottomPaddle/100) * constants.court.width - constants.paddle.width / 2) &&
-                (left < ( (leftPositionOfBottomPaddle/100) * constants.court.width + constants.paddle.width / 2) ) ) {
-              top = constants.court.height - constants.paddle.height - constants.ball.radius;
-              constants.ball.deltaTop = -constants.ball.deltaTop;
-            }
+        if (state.bottomPaddle && 
+            left > ( (state.paddles[state.bottomPaddle]/100) * constants.court.width - constants.paddle.width / 2) &&
+            (left < ( (state.paddles[state.bottomPaddle]/100) * constants.court.width + constants.paddle.width / 2) ) ) {
+            top = constants.court.height - constants.paddle.height - constants.ball.radius;
+            constants.ball.deltaTop = -constants.ball.deltaTop;
         } else {
             //TODO: #1
             left = constants.court.width / 2;

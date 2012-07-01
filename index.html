@@ -10,7 +10,7 @@
         -moz-transform: rotate(270deg);
       }
       .rightPlayer {
-        -moz-tranform: rotate(90deg);
+        -moz-transform: rotate(90deg);
       }
     </style>
   </head>
@@ -81,6 +81,11 @@
                  constants.court.height - constants.paddle.height, constants.paddle.width, constants.paddle.height);
     ctx.fillRect((state.paddles[state.sides.top] / 100 * constants.court.width) - (constants.paddle.width / 2),
                  0, constants.paddle.width, constants.paddle.height);
+    ctx.fillRect(0, (state.paddles[state.sides.left] / 100 * constants.court.height) - (constants.paddle.height / 2),
+                 constants.paddle.height, constants.paddle.width);
+    ctx.fillRect(constants.court.width - constants.paddle.height,
+                 (state.paddles[state.sides.right] / 100 * constants.court.height) - (constants.paddle.height / 2),
+                 constants.paddle.height, constants.paddle.width);
     ctx.fillStyle = constants.colors.ball;
     ctx.beginPath(); 
     ctx.arc( state.ball.left, state.ball.top, constants.ball.radius, 0, Math.PI * 2 );
@@ -103,10 +108,12 @@
   window.addEventListener('keydown', function onKeyDown(aEvent) {
     switch (aEvent.which) {
       case 37: // Left
-        movePaddle(-constants.paddle.delta);
+        if (state.sides.top == constants.player.id || state.sides.right == constants.player.id) movePaddle(constants.paddle.delta);
+        else movePaddle(-constants.paddle.delta);
         break;
       case 39: // Right
-        movePaddle(constants.paddle.delta);
+        if (state.sides.top == constants.player.id || state.sides.right == constants.player.id) movePaddle(-constants.paddle.delta);
+        else movePaddle(constants.paddle.delta);
         break;
     }
   }, false);
