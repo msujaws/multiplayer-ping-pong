@@ -64,9 +64,7 @@ function calculateBallPosition() {
     positions.ball.top = top;
 };
 
-serverState.intervalId = setInterval( function(){
-    calculateBallPosition();
-}, constants.ball.interval );  
+
 
 io.sockets.on('connection', function (socket) {
     serverState.connections++;
@@ -82,7 +80,13 @@ io.sockets.on('connection', function (socket) {
                                  ball: { radius: constants.ball.radius }       
                                } 
                 );          
-              
+    
+    if ( !serverState.intervalId ) {
+        serverState.intervalId = setInterval( function(){
+            calculateBallPosition();
+        }, constants.ball.interval );  
+    }
+    
     setInterval( function(){
         socket.emit('ball', { position: { left: positions.ball.left, top: positions.ball.top } }); 
     }, constants.ball.interval );  
