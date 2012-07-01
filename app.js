@@ -89,7 +89,7 @@ io.sockets.on('connection', function (socket) {
     
     socket.intervalId = setInterval( function(){
         socket.emit('ball', { position: { left: positions.ball.left, top: positions.ball.top } }); 
-        socket.emit('paddles', { position: positions.paddles });
+        socket.emit('paddles', { positions: positions.paddles });
     }, constants.ball.interval );  
     
     socket.on('paddle', function (data) {

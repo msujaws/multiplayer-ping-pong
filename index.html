@@ -35,7 +35,12 @@
   });
   
   socket.on('paddles', function(data) {
-    positions.paddles = data.position;
+    var paddles = data.positions;
+    // Overwrite the server's version of my own paddle position
+    // if I already know where I am so I don't redraw in the old spot.
+    if (positions.paddles[constants.player.id])
+      paddles[constants.player.id] = positions.paddles[constants.player.id];
+    positions.paddles = paddles;
   });
   
   socket.on('ball', function (data) {
