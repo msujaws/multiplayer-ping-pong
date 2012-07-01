@@ -55,9 +55,7 @@ function calculateBallPosition() {
     }
     if (top + constants.ball.radius >= constants.court.height - constants.paddle.height) {
         if (state.bottomPaddle) {
-            console.log(state.bottomPaddle);
             var leftPositionOfBottomPaddle = state.paddles[state.bottomPaddle];
-            console.log(leftPositionOfBottomPaddle);
             if (left > ( (leftPositionOfBottomPaddle/100) * constants.court.width - constants.paddle.width / 2) &&
                 (left < ( (leftPositionOfBottomPaddle/100) * constants.court.width + constants.paddle.width / 2) ) ) {
               top = constants.court.height - constants.paddle.height - constants.ball.radius;
@@ -124,7 +122,15 @@ io.sockets.on('connection', function (socket) {
         serverState.connections--;
         clearInterval( socket.intervalId );
         delete state.paddles[socket.id];
-        // todo: need to give back the side so someone else can take it.
+        
+        if (state.bottomPaddle == socket.id)
+            state.bottomPaddle = 0;
+        else if (state.topPaddle == socket.id)
+            state.topPaddle = 0;
+        else if (state.leftPaddle == socket.id)
+            state.leftPaddle = 0;
+        else if (state.rightPaddle == socket.id)
+            state.rightPaddle = 0;
         if ( serverState.connections == 0 ) {
             clearInterval( serverState.intervalId );
             serverState.intervalId = 0;
