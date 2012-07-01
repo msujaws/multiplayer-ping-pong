@@ -3,13 +3,14 @@
 //Splash Page
 //  - Join a new game
 // move javascript to client.js
+// move code to server to test multiple players
 
 var constants = { court: { width: 600, height: 600 }, 
                   paddle: { width: 50, height: 15, delta: 3 },
-                  ball: { radius: 10, deltaLeft: 3, deltaTop: 2, interval: 15 }
+                  ball: { radius: 10, deltaLeft: 3, deltaTop: 2, interval: 30 }
                 };                         
 
-var positions = { paddles: { position: 50 },
+var positions = { paddles: {},
                   ball: { left: 0, top: 0 }, 
                 };
        
@@ -66,8 +67,9 @@ function calculateBallPosition() {
 };
 
 io.sockets.on('connection', function (socket) {
-    serverState.connections++;
-    console.log(serverState.connections);
+
+    positions.paddles[socket.id] = 50;
+
     socket.emit('environment', { court:  {  width:  constants.court.width, 
                                             height: constants.court.height,
                                          }, 
@@ -75,8 +77,9 @@ io.sockets.on('connection', function (socket) {
                                             height: constants.paddle.height,
                                             delta: constants.paddle.delta
                                          },
-                                 ball: { radius: constants.ball.radius }       
-    });          
+                                 ball: { radius: constants.ball.radius },
+                                 player: { id: socket.id }
+    });
     
     if ( !serverState.intervalId ) {
         serverState.intervalId = setInterval( function(){
@@ -86,20 +89,24 @@ io.sockets.on('connection', function (socket) {
     
     socket.intervalId = setInterval( function(){
         socket.emit('ball', { position: { left: positions.ball.left, top: positions.ball.top } }); 
-        socket.emit('paddles', { myPaddle: { position : positions.paddles.position } } );
+        socket.emit('paddles', { position: positions.paddles });
     }, constants.ball.interval );  
     
     socket.on('paddle', function (data) {
-        positions.paddles.position = data.left;
+        positions.paddles[socket.id] = data.left;
     });
     
     socket.on('disconnect', function () {
         serverState.connections--;
         clearInterval( socket.intervalId );
+        delete positions.paddles[socket.id];
         if ( serverState.connections == 0 ) {
             clearInterval( serverState.intervalId );
             serverState.intervalId = 0;
         }
         console.log('player left');
     });  
+    
+    console.log(serverState.connections);
+    serverState.connections++;
 });

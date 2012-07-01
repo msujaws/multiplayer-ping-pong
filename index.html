@@ -13,9 +13,10 @@
                     colors: { court: "brown", ball: "black", paddle: "orange" },
                     paddle: { width: 0, height: 0, delta: 0 },
                     ball: { radius: 0 },
+                    player: { id: 0 }
                   };                               
 
-  var positions = { myPaddle: { position: 0 },
+  var positions = { paddles: {},
                     ball: { left: 0, top: 0 }
                   };
 
@@ -29,11 +30,12 @@
     constants.paddle.delta = data.paddle.delta;
     constants.paddle.width  = data.paddle.width;
     constants.paddle.height  = data.paddle.height;
-    constants.ball.radius = data.ball.radius;    
+    constants.ball.radius = data.ball.radius;   
+    constants.player.id = data.player.id;    
   });
   
   socket.on('paddles', function(data) {
-    positions.myPaddle.position = data.myPaddle.position;
+    positions.paddles = data.position;
   });
   
   socket.on('ball', function (data) {
@@ -48,7 +50,7 @@
     ctx.fillStyle = constants.colors.court;
     ctx.fillRect(0, 0, constants.court.width, constants.court.height);
     ctx.fillStyle = constants.colors.paddle;
-    ctx.fillRect((positions.myPaddle.position / 100 * constants.court.width) - (constants.paddle.width / 2),
+    ctx.fillRect((positions.paddles[constants.player.id] / 100 * constants.court.width) - (constants.paddle.width / 2),
                  constants.court.height - constants.paddle.height, constants.paddle.width, constants.paddle.height);
     ctx.fillStyle = constants.colors.ball;
     ctx.beginPath(); 
@@ -57,14 +59,14 @@
   };
 
   var movePaddle = function (delta) {
-    var newLeft = positions.myPaddle.position + delta;
+    var newLeft = positions.paddles[constants.player.id] + delta;
     if (newLeft >= 100)
       newLeft = 100;
     else if (newLeft <= 0)
       newLeft = 0;
-    if (newLeft != positions.myPaddle.position) {
-      positions.myPaddle.position = newLeft;
-      socket.emit('paddle', {left: positions.myPaddle.position});
+    if (newLeft != positions.paddles[constants.player.id]) {
+      positions.paddles[constants.player.id] = newLeft;
+      socket.emit('paddle', {left: positions.paddles[constants.player.id] });
       drawCanvas();
     }
   };
