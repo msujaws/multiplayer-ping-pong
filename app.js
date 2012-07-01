@@ -4,24 +4,22 @@
 //  - Join a new game
 // move javascript to client.js
 
-var connections = 0;
+var constants = { court: { width: 600, height: 600 }, 
+                  paddle: { width: 50, height: 15, delta: 3 },
+                  ball: { radius: 10, deltaLeft: 3, deltaTop: 2, interval: 15 }
+                };                         
 
-var ballLeft = 0, ballTop = 0, ballRadius = 10,
-    ballDirectionInRad = .5,
-    ballLeftDelta = 3,
-    ballTopDelta = 2,
-    sendBallPositionTimeInterval = 15,
-    courtWidth = 600, courtHeight = 600,
-    paddleWidth = 50,
-    paddleHeight = 15,
-    paddlePosition = 50,
-    paddleDelta = 3,
-    intervalId = 0,
-    activePlayers = [];
+var positions = { paddles: { position: 50 },
+                  ball: { left: 0, top: 0 }, 
+                };
+       
+var serverState = { intervalId: 0, 
+                    connections: 0
+                  };
 
-var app = require('http').createServer(handler)
-  , io = require('socket.io').listen(app)
-  , fs = require('fs');
+var app = require('http').createServer(handler),
+    io = require('socket.io').listen(app),
+    fs = require('fs');
 
 app.listen(80);
 
@@ -39,68 +37,65 @@ function handler (req, res) {
 };
 
 function updateBallPosition() {
-  var newBallLeft = ballLeft + ballLeftDelta;
-  var newBallTop = ballTop + ballTopDelta;
-  if (newBallLeft >= courtWidth) {
-    newBallLeft = courtWidth;
-    ballLeftDelta = -ballLeftDelta;
+  var newBallLeft = positions.ball.left + constants.ball.deltaLeft;
+  var newBallTop = positions.ball.top + constants.ball.deltaTop;
+  if (newBallLeft >= constants.court.width) {
+    newBallLeft = constants.court.width;
+    constants.ball.deltaLeft = -constants.ball.deltaLeft;
   } else if (newBallLeft <= 0) {
     newBallLeft = 0;
-    ballLeftDelta = -ballLeftDelta;
+    constants.ball.deltaLeft = -constants.ball.deltaLeft;
   }
-  if (newBallTop + ballRadius >= courtHeight - paddleHeight) {
-    if ( (newBallLeft > ( (paddlePosition/100) * 600 - paddleWidth / 2) ) &&
-       (newBallLeft < ( (paddlePosition/100) * 600 + paddleWidth / 2) ) ) {
-        newBallTop = courtHeight - paddleHeight - ballRadius;
-        ballTopDelta = -ballTopDelta;
+  if (newBallTop + constants.ball.radius >= constants.court.height - constants.paddle.height) {
+    if ( (newBallLeft > ( (positions.paddles.position/100) * 600 - constants.paddle.width / 2) ) &&
+       (newBallLeft < ( (positions.paddles.position/100) * 600 + constants.paddle.width / 2) ) ) {
+        newBallTop = constants.court.height - constants.paddle.height - constants.ball.radius;
+        constants.ball.deltaTop = -constants.ball.deltaTop;
     } else {
        //TODO: #1
-       newBallLeft = courtWidth / 2;
-       newBallTop = courtHeight / 2;       
+       newBallLeft = constants.court.width / 2;
+       newBallTop = constants.court.height / 2;       
     }
   } else if (newBallTop <= 0) {
     newBallTop = 0;
-    ballTopDelta = -ballTopDelta;
+    constants.ball.deltaTop = -constants.ball.deltaTop;
   }
-  ballLeft = newBallLeft;
-  ballTop = newBallTop;
-  return { left: ballLeft, top: ballTop };
+  positions.ball.left = newBallLeft;
+  positions.ball.top = newBallTop;
 };
 
-var ball = { left: ballLeft, top: ballTop };
-
-setInterval( function(){
-  ball = updateBallPosition();
-}, sendBallPositionTimeInterval );  
+serverState.intervalId = setInterval( function(){
+  updateBallPosition();
+}, constants.ball.interval );  
 
 io.sockets.on('connection', function (socket) {
-  connections++;
-  console.log(connections);
-  socket.emit('environment', { court:  {  width:  courtWidth, 
-                                          height: courtHeight,
+  serverState.connections++;
+  console.log(serverState.connections);
+  socket.emit('environment', { court:  {  width:  constants.court.width, 
+                                          height: constants.court.height,
                                        }, 
-                               paddle: {  position: paddlePosition,
-                                          width: paddleWidth, 
-                                          height: paddleHeight,
-                                          delta: paddleDelta
+                               paddle: {  position: positions.paddles.position,
+                                          width: constants.paddle.width, 
+                                          height: constants.paddle.height,
+                                          delta: constants.paddle.delta
                                        },
-                               ball: { radius: ballRadius }       
+                               ball: { radius: constants.ball.radius }       
                              } 
               );          
             
   setInterval( function(){
-    socket.emit('ball', { position: { left: ball.left, top: ball.top } }); 
-  }, sendBallPositionTimeInterval );  
+    socket.emit('ball', { position: { left: positions.ball.left, top: positions.ball.top } }); 
+  }, constants.ball.interval );  
   
   socket.on('paddle', function (data) {
-    paddlePosition = data.left;
+    positions.paddles.position = data.left;
   });
   
   socket.on('disconnect', function () {
-    connections--;
-    if ( connections == 0 ) {
-        clearInterval( intervalId );
-        intervalId = 0;
+    serverState.connections--;
+    if ( serverState.connections == 0 ) {
+        clearInterval( serverState.intervalId );
+        serverState.intervalId = 0;
     }
     console.log('player left');
   });  
