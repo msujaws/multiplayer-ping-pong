@@ -5,61 +5,63 @@
   </head>
   <body>
     <canvas id="court"></canvas>
-    <div id="channel"><div id="paddle"></div></div>
+    
     <script src="/socket.io/socket.io.js"></script>
     <script>
+    
+  var constants = { court: { width: 0, height: 0 }, 
+                    colors: { court: "brown", ball: "black", paddle: "orange" },
+                    paddle: { width: 0, height: 0, delta: 0 },
+                    ball: { radius: 0 },
+                  };                               
+
+  var positions = { myPaddle: { position: 0 },
+                ball: { left: 0, top: 0 }
+              };
+
   var socket = io.connect('http://localhost'),
-      canvasWidth = 0,
-      canvasHeight = 0,
-      paddleWidth = 0,
-      paddleHeight = 0,
-      paddlePosition = 0,
-      ballLeft = 0,
-      ballTop = 0,
-      ballRadius = 0,
-      moveDelta = 0,
-      getBallPositionTimeInterval = 15,
-      paddle = document.getElementById("paddle"),
       canvas = document.getElementById("court"),
       ctx = canvas.getContext('2d');
   
-  var courtColor = "brown",
-      ballColor = "black",
-      paddleColor = "orange";
-      
   socket.on('environment', function(data) {
-    canvasWidth = data.court.width;
-    canvasHeight = data.court.height;
-    paddleDelta = data.paddle.delta;
-    paddleWidth = data.paddle.width;
-    paddleHeight = data.paddle.height;
-    paddlePosition = data.paddle.position;
-    ballRadius = data.ball.radius;
+    constants.court.width = data.court.width;
+    constants.court.height = data.court.height;
+    constants.paddle.delta = data.paddle.delta;
+    constants.paddle.width  = data.paddle.width;
+    constants.paddle.height  = data.paddle.height;
+    constants.ball.radius = data.ball.radius;
+    positions.myPaddle.position = data.paddle.position;
+  });
+  
+  socket.on('ball', function (data) {
+    positions.ball.left = data.position.left;
+    positions.ball.top = data.position.top;
+    drawCanvas();     
   });
   
   var drawCanvas = function() {
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    ctx.fillStyle = courtColor;
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    ctx.fillStyle = paddleColor;
-    ctx.fillRect((paddlePosition / 100 * canvasWidth) - (paddleWidth / 2),
-                 canvasHeight - paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = ballColor;
+    canvas.width = constants.court.width;
+    canvas.height = constants.court.height;
+    ctx.fillStyle = constants.colors.court;
+    ctx.fillRect(0, 0, constants.court.width, constants.court.height);
+    ctx.fillStyle = constants.colors.paddle;
+    ctx.fillRect((positions.myPaddle.position / 100 * constants.court.width) - (constants.paddle.width / 2),
+                 constants.court.height - constants.paddle.height, constants.paddle.width, constants.paddle.height);
+    ctx.fillStyle = constants.colors.ball;
     ctx.beginPath(); 
-    ctx.arc( ballLeft, ballTop, ballRadius, 0, Math.PI * 2 );
+    ctx.arc( positions.ball.left, positions.ball.top, constants.ball.radius, 0, Math.PI * 2 );
     ctx.fill();
   };
 
   var movePaddle = function (delta) {
-    var newLeft = paddlePosition + delta;
+    var newLeft = positions.myPaddle.position + delta;
     if (newLeft >= 100)
       newLeft = 100;
     else if (newLeft <= 0)
       newLeft = 0;
-    if (newLeft != paddlePosition) {
-      paddlePosition = newLeft;
-      socket.emit('paddle', {left: paddlePosition});
+    if (newLeft != positions.myPaddle.position) {
+      positions.myPaddle.position = newLeft;
+      socket.emit('paddle', {left: positions.myPaddle.position});
       drawCanvas();
     }
   };
@@ -67,19 +69,14 @@
   window.addEventListener('keydown', function onKeyDown(aEvent) {
     switch (aEvent.which) {
       case 37: // Left
-        movePaddle(-paddleDelta);
+        movePaddle(-constants.paddle.delta);
         break;
       case 39: // Right
-        movePaddle(paddleDelta);
+        movePaddle(constants.paddle.delta);
         break;
     }
   }, false);
-  
-  socket.on('ball', function (data) {
-    ballLeft = data.position.left;
-    ballTop = data.position.top;
-    drawCanvas();     
-  });
+ 
     </script>  
   </body>
 </html>
