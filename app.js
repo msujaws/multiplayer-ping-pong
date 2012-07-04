@@ -18,7 +18,7 @@ var state = { paddles: {},
               leftPaddle: 0,
               rightPaddle: 0
             };
-       
+
 var serverState = { intervalId: 0, 
                     connections: 0
                   };
@@ -73,7 +73,6 @@ function calculateBallPosition() {
 };
 
 io.sockets.on('connection', function (socket) {
-
     var paddleAdded = false;
     if (!state.bottomPaddle) {
         state.bottomPaddle = socket.id;
@@ -87,9 +86,9 @@ io.sockets.on('connection', function (socket) {
       // placeholder for fifth player
       return;
     }
-    
+
     state.paddles[socket.id] = 50;
-    
+
     socket.emit('environment', { court:  {  width:  constants.court.width, 
                                             height: constants.court.height,
                                          }, 
@@ -100,27 +99,27 @@ io.sockets.on('connection', function (socket) {
                                  ball: { radius: constants.ball.radius },
                                  player: { id: socket.id }
     });
-    
+
     if ( !serverState.intervalId ) {
         serverState.intervalId = setInterval( function(){
             calculateBallPosition();
         }, constants.ball.interval );  
     }
-    
+
     socket.intervalId = setInterval( function(){
         socket.emit('ball', { position: { left: state.ball.left, top: state.ball.top } }); 
         socket.emit('paddles', { positions: state.paddles, sides: {bottom: state.bottomPaddle, top: state.topPaddle, left: state.leftPaddle, right: state.rightPaddle }});
     }, constants.ball.interval );  
-    
+
     socket.on('paddle', function (data) {
         state.paddles[socket.id] = data.left;
     });
-    
+
     socket.on('disconnect', function () {
         serverState.connections--;
         clearInterval( socket.intervalId );
         delete state.paddles[socket.id];
-        
+
         if (state.bottomPaddle == socket.id)
             state.bottomPaddle = 0;
         else if (state.topPaddle == socket.id)
@@ -135,7 +134,7 @@ io.sockets.on('connection', function (socket) {
         }
         console.log('player left');
     });  
-    
+
     console.log(serverState.connections);
     serverState.connections++;
 });
